@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Driver Monitor Dashboard</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <h1>DriverMonitor <small>supervised-automation prototype</small></h1>
+    </div>
+    <div class="topbar-controls">
+      <label class="field">
+        <span>Iteration</span>
+        <select id="iteration-select" aria-label="Sensor iteration"></select>
+      </label>
+      <button id="mute-btn" class="btn btn-ghost" type="button" aria-pressed="false">🔊 Sound on</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ───────────── Instrument cluster ───────────── -->
+    <section class="cluster" aria-label="Instrument cluster">
+      <div class="gauge-wrap">
+        <svg id="speedo" class="gauge" role="img" aria-label="Speedometer"></svg>
+      </div>
+
+      <div class="cluster-center">
+        <div id="alert-card" class="alert-card level-0" role="status" aria-live="assertive">
+          <div id="alert-icon" class="alert-icon" aria-hidden="true"></div>
+          <div class="alert-text">
+            <div id="alert-title" class="alert-title">Driver attentive</div>
+            <div id="alert-detail" class="alert-detail">Monitoring idle — vehicle parked</div>
+          </div>
+        </div>
+
+        <div class="escalation" aria-label="Escalation ladder">
+          <div class="step" data-level="1"><span class="dot"></span>Symbol</div>
+          <div class="step" data-level="2"><span class="dot"></span>Beep</div>
+          <div class="step" data-level="3"><span class="dot"></span>Seat</div>
+          <div class="step" data-level="4"><span class="dot"></span>Pull over</div>
+          <div class="step" data-level="5"><span class="dot"></span>911</div>
+        </div>
+
+        <div class="telltales" aria-label="Telltale lamps">
+          <span class="telltale" id="tt-auto" title="Driving automation engaged">AUTO</span>
+          <span class="telltale" id="tt-hands" title="Hands on wheel">🖐 HANDS</span>
+          <span class="telltale" id="tt-eyes" title="Eye sensor">👁 EYES</span>
+          <span class="telltale" id="tt-seat" title="Seat vibration">💺 SEAT</span>
+          <span class="telltale" id="tt-hazard" title="Hazard lights">⚠ HAZARD</span>
+          <span class="telltale" id="tt-fuel" title="Low fuel">⛽ LOW</span>
+        </div>
+      </div>
+
+      <div class="gauge-wrap">
+        <svg id="fuel" class="gauge" role="img" aria-label="Fuel gauge"></svg>
+      </div>
+    </section>
+
+    <!-- ───────────── Panels ───────────── -->
+    <section class="panels">
+
+      <!-- Sensor status -->
+      <article class="panel" id="panel-sensors">
+        <h2>Sensor inputs</h2>
+        <p class="hint">What the selected iteration can actually sense. Greyed sensors are not installed in this iteration, so the signal is invisible to the monitor.</p>
+        <ul class="sensor-list" id="sensor-list"></ul>
+      </article>
+
+      <!-- Simulation controls -->
+      <article class="panel" id="panel-sim">
+        <h2>Drive simulation</h2>
+        <div class="slider-row">
+          <label for="speed-slider">Speed <output id="speed-out">0</output> mph</label>
+          <input id="speed-slider" type="range" min="0" max="160" step="1" value="0">
+        </div>
+        <div class="slider-row">
+          <label for="fuel-slider">Fuel <output id="fuel-out">68</output>%</label>
+          <input id="fuel-slider" type="range" min="0" max="100" step="1" value="68">
+        </div>
+        <label class="toggle-row">
+          <input type="checkbox" id="auto-toggle" checked>
+          <span>Driving automation engaged (hands-on supervised, SAE Level 2)</span>
+        </label>
+
+        <h3>Driver behaviour</h3>
+        <div class="toggle-grid" id="hazard-toggles">
+          <button class="btn hazard" data-hazard="handsOff" type="button" aria-pressed="false">🖐 Hands off wheel</button>
+          <button class="btn hazard" data-hazard="eyesClosed" type="button" aria-pressed="false">😴 Eyes closed</button>
+          <button class="btn hazard" data-hazard="gazeOff" type="button" aria-pressed="false">👀 Gaze off road</button>
+          <button class="btn hazard" data-hazard="phoneInHand" type="button" aria-pressed="false">📱 Phone in hand</button>
+          <button class="btn hazard" data-hazard="slouched" type="button" aria-pressed="false">🪑 Slumped posture</button>
+        </div>
+        <div class="btn-row">
+          <button id="ack-btn" class="btn btn-primary" type="button">✔ Driver responds (clear all)</button>
+          <button id="reset-btn" class="btn btn-ghost" type="button">↺ Reset drive</button>
+        </div>
+      </article>
+
+      <!-- Iteration details -->
+      <article class="panel" id="panel-iteration">
+        <h2 id="iter-name">Iteration</h2>
+        <p id="iter-summary" class="hint"></p>
+        <div class="metric-row">
+          <div class="metric"><span class="metric-label">Perceived privacy</span><span class="metric-value" id="m-privacy">–</span><span class="metric-sub">survey comfort, 1–5</span></div>
+          <div class="metric"><span class="metric-label">Accuracy</span><span class="metric-value" id="m-accuracy">–</span><span class="metric-sub">run tests to compute</span></div>
+          <div class="metric"><span class="metric-label">Added cost</span><span class="metric-value" id="m-cost">–</span><span class="metric-sub">per vehicle, est.</span></div>
+        </div>
+        <h3>Data this iteration collects</h3>
+        <ul id="iter-data" class="plain-list"></ul>
+        <h3>Bill of materials</h3>
+        <table class="table" id="iter-bom"><thead><tr><th>Component</th><th class="num">USD</th></tr></thead><tbody></tbody></table>
+        <h3>Detection thresholds</h3>
+        <table class="table" id="iter-thresholds"><thead><tr><th>Signal</th><th class="num">Alert after</th><th class="num">Sensor latency</th></tr></thead><tbody></tbody></table>
+      </article>
+
+      <!-- Test runner -->
+      <article class="panel panel-wide" id="panel-tests">
+        <h2>Accuracy test suite</h2>
+        <p class="hint">Each scenario is a scripted timeline of driver behaviour fed to a fresh monitor at 100 ms steps. A scenario passes when the monitor alerts if and only if the behaviour is genuinely inattentive.</p>
+        <div class="btn-row">
+          <button id="run-tests-btn" class="btn btn-primary" type="button">▶ Run on selected iteration</button>
+          <button id="run-all-btn" class="btn" type="button">▶ Compare all iterations</button>
+        </div>
+        <div id="test-results"></div>
+      </article>
+
+      <!-- Event log -->
+      <article class="panel panel-wide" id="panel-log">
+        <h2>Event log</h2>
+        <ol id="event-log" class="log" aria-live="polite"></ol>
+      </article>
+    </section>
+  </main>
+
+  <div id="emergency-banner" class="emergency-banner" hidden>
+    <strong>🚨 Emergency call placed.</strong> Vehicle stopped on shoulder, hazards on, location shared with 911 dispatcher. Cabin audio open.
+  </div>
+
+  <script src="js/iterations.js"></script>
+  <script src="js/gauges.js"></script>
+  <script src="js/monitor.js"></script>
+  <script src="js/tests.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
